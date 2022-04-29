@@ -10,7 +10,7 @@ The main idea of this project is to present the notion of zero-knowledge proofs 
 
 Let's start with a simple voting scheme called "mini-voting" for yes/no questions. The scheme consists of one "trusted" authority, a public bulletin board to which everyone (authority and voters) can post messages, and some number of voters. The encryption scheme used is the "Exponential ElGamal", which is a homomorphic assymetric encryption.
 
-**Setup:** The authority creates a (public key, secret key) pair `(pk, sk)` using the scheme's key generation algorithm and posts the `pk` to the bulletin board. 
+**Setup:** The authority creates a (public key, secret key) pair `(pk, sk)` using the scheme's key generation algorithm and posts the `pk` to the bulletin board.
 
 ```python
 def generate_keys():
@@ -25,7 +25,7 @@ def generate_keys():
 function encrypt(pk, m) {
   let r = random(0, q - 1);
   let a = pow(g, r, p);
-  let b = pow(g, m, p) * pow(pk, r, p) % p;
+  let b = (pow(g, m, p) * pow(pk, r, p)) % p;
   return [a, b];
 }
 ```
@@ -89,7 +89,10 @@ function checkDecryption(pk, cipher, proof) {
   let [a, b] = cipher;
   let [u, v, s, d] = proof;
   let c = customHash([pk, a, b, u, v]);
-  return pow(a, s, p) === u * pow(d, c, p) % p && pow(g, s, p) === v * pow(pk, c, p) % p;
+  return (
+    pow(a, s, p) === (u * pow(d, c, p)) % p &&
+    pow(g, s, p) === (v * pow(pk, c, p)) % p
+  );
 }
 ```
 
@@ -107,8 +110,9 @@ function validVoteProof(pk, v, a, b, r) {
     r0 = random(0, q - 1);
     r1 = random(0, q - 1);
 
-    a1 = pow(g, r1, p) * pow(a, c1 * (p - 2), p) % p;
-    b1 = pow(pk, r1, p) * pow(b * pow(g, p - 2, p) % p, c1 * (p - 2), p) % p;
+    a1 = (pow(g, r1, p) * pow(a, c1 * (p - 2), p)) % p;
+    b1 =
+      (pow(pk, r1, p) * pow((b * pow(g, p - 2, p)) % p, c1 * (p - 2), p)) % p;
 
     a0 = pow(g, r0, p);
     b0 = pow(pk, r0, p);
@@ -116,17 +120,17 @@ function validVoteProof(pk, v, a, b, r) {
     c = customHash([pk, a, b, a0, b0, a1, b1]);
     // TODO: There is a problem with the notation in the paper.
     // c0 = Math.abs(c1 - c);
-    c0 = (q + (c1 - c) % q) % q;
+    c0 = (q + ((c1 - c) % q)) % q;
 
-    r0 = (r0 + (c0 * r) % q) % q;
+    r0 = (r0 + ((c0 * r) % q)) % q;
     return [a0, a1, b0, b1, c0, c1, r0, r1];
   } else if (v === 1) {
     c0 = random(0, q - 1);
     r0 = random(0, q - 1);
     r1 = random(0, q - 1);
 
-    a0 = pow(g, r0, p) * pow(a, c0 * (p - 2), p) % p;
-    b0 = pow(pk, r0, p) * pow(b, c0 * (p - 2), p) % p;
+    a0 = (pow(g, r0, p) * pow(a, c0 * (p - 2), p)) % p;
+    b0 = (pow(pk, r0, p) * pow(b, c0 * (p - 2), p)) % p;
 
     a1 = pow(g, r1, p);
     b1 = pow(pk, r1, p);
@@ -134,9 +138,9 @@ function validVoteProof(pk, v, a, b, r) {
     c = customHash([pk, a, b, a0, b0, a1, b1]);
     // TODO: There is a problem with the notation in the paper.
     // c1 = Math.abs(c0 - c);
-    c1 = (q + (c0 - c) % q) % q;
+    c1 = (q + ((c0 - c) % q)) % q;
 
-    r1 = (r1 + (c1 * r) % q) % q;
+    r1 = (r1 + ((c1 * r) % q)) % q;
     return [a0, a1, b0, b1, c0, c1, r0, r1];
   } else {
     // an adversary will tweak the code below
@@ -158,6 +162,3 @@ def verify_vote(pk, cipher, proof):
     # s5 = (c0 + c1) % q == custom_hash([pk, a, b, a0, b0, a1, b1])
     return s1 and s2 and s3 and s4
 ```
-
-This is it. I hope you have enjoyed it.  
-Please feel free to open an issue or a pull request.
