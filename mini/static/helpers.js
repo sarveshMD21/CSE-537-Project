@@ -1,8 +1,3 @@
-/**
- * Created by Henrikh Kantuni on 12/14/17.
- */
-
-
 function random(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -22,6 +17,6 @@ function pow(x, y, z) {
 function encrypt(pk, m) {
   let r = random(0, q - 1);
   let a = pow(g, r, p);
-  let b = pow(g, m, p) * pow(pk, r, p) % p;
+  let b = (pow(g, m, p) * pow(pk, r, p)) % p;
   return [a, b];
 }
